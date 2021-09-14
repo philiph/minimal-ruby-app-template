@@ -1,0 +1,46 @@
+#!/bin/bash
+
+# Runs the test suite for the application.
+
+set -Eeuo pipefail
+
+errormessage() {
+  local parent_lineno="$1"
+  local message="$2"
+  local code="${3:-1}"
+  if [[ -n "$message" ]] ; then
+    echo "Error on or near line ${parent_lineno}: ${message}; exiting with status ${code}"
+  else
+    echo "Error on or near line ${parent_lineno}; exiting with status ${code}"
+  fi
+  exit "${code}"
+}
+trap 'errormessage ${LINENO}' ERR
+
+
+log() {
+  local color=$1
+  local message="$@"
+  local reset='\033[0m'
+  echo -e "${color}==> ${message}${reset}"
+}
+
+status() {
+  local cyan='\033[0;36m'
+  echo
+  log $cyan "$@"
+}
+
+success() {
+  local green='\033[0;32m'
+  echo
+  log $green "$@"
+}
+
+status "Running RuboCop..."
+bundle exec rubocop
+
+status "Running RSpec..."
+bundle exec rspec
+
+success "All tests & linting passed successfully!"
